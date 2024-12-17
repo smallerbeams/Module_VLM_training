@@ -145,6 +145,8 @@ class Minigptv2(nn.Module):
 
     def encode_img(self, image):
         device = image.device
+        # print(device)
+        # breakpoint()
         ##測試
         # print('encode_image_is_here')
 
@@ -283,6 +285,7 @@ class Minigptv2(nn.Module):
         ### prepare input tokens
         if 'image' in samples:
             img_embeds, img_atts = self.encode_img(samples["image"])
+    
         else:
             img_embeds = img_atts = None
 
@@ -369,6 +372,35 @@ class Minigptv2(nn.Module):
         cat_embs = torch.stack(cat_embs)
         cat_atts = torch.stack(cat_atts)
         return cat_embs, cat_atts, input_lens
+
+    def get_context_emb(self, prompt, img_list):
+        # print("prompt", prompt)
+        # print("img_list", img_list[0].shape)
+        # print(img_list)
+        device = img_list[0].device
+        # print(device)
+        prompt_segs = prompt.split('<ImageHere>')
+        # print("描述切割: ", prompt_segs)
+        # print("len(prompt_segs), len(img_list): ", len(prompt_segs), len(img_list))
+        assert len(prompt_segs) == len(img_list) + 1, "Unmatched numbers of image placeholders and images."
+        seg_tokens = [
+            self.llama_tokenizer(
+                seg, return_tensors="pt", add_special_tokens=i==0).to(device).input_ids # only add bos to the first seg
+            for i, seg in enumerate(prompt_segs)
+        ]
+        # print("輸入文字Token", seg_tokens)
+        seg_embs = [self.embed_tokens(seg_t) for seg_t in seg_tokens]
+
+        mixed_embs = [emb for pair in zip(seg_embs[:-1], img_list) for emb in pair] + [seg_embs[-1]]
+        ##測試
+        # print("mixed_embs-0", len(mixed_embs))
+        # print('mixed_embs第1步部分:{}\nmixed_embs第2步部分:{}\nmixed_embs第3步部分:{}'.format(mixed_embs[0].shape,mixed_embs[1].shape,mixed_embs[2].shape))
+        # breakpoint()
+        ##
+        # print(f"前後文字與中間影像embedding shape: 前){mixed_embs[0].shape} 中){mixed_embs[1].shape} 後)mixed_embs[0].shape{2}")
+        mixed_embs = torch.cat(mixed_embs, dim=1)
+        # print("前後文字與影像合併後shape", mixed_embs.shape)
+        return mixed_embs
 
     def forward(self, samples, reduction='mean'):
         # prepare the embedding to condition and the embedding to regress

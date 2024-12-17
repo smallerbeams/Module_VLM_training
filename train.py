@@ -2,7 +2,7 @@ import os, sys
 import torch
 import signal ## KeyboardInterrupt 程序流程指令
 import torch.distributed as dist
-os.environ["CUDA_VISIBLE_DEVICES"] = "6"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 from torch.nn.parallel import DistributedDataParallel as DDP
 from process_block.common.dist_utils import get_rank, init_distributed_mode
