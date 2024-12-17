@@ -1,9 +1,9 @@
 # Getting Started
 
-**1. hardware configuration**
+**1. Hardware configuration**
 | Heading | we use |
 |:-------------------:|-------------------|
-|Computer system|ubuntu 20.04.6 LTS Desktop|
+|Computer system|Ubuntu 20.04.6 LTS Desktop|
 |Graphics card|RTX8000|
 |Hard drive space|300~400GB(Llama2-7B)|
 
